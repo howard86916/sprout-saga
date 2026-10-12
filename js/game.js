@@ -118,7 +118,7 @@ const Game = {
   },
 
   spawnFromPoint(s, instant) {
-    const plat = s.p != null ? this.map.platforms[s.p] : this.map.ground;
+    const plat = s.b != null ? this.map.bridges[s.b] : s.p != null ? this.map.platforms[s.p] : this.map.ground;
     const m = new Monster(s.type, s.x, plat, this.map, { range: s.range, instant });
     s.monster = m;
     this.monsters.push(m);
@@ -299,7 +299,7 @@ const Game = {
     const hi = m.plat.x + m.plat.w - 8;
     loot.forEach((it, i) => {
       const x = clamp(m.x + (i - (loot.length - 1) / 2) * 22, lo, hi);
-      this.drops.push(new Drop(it.kind, it.value, x, m.y - d.h / 2, m.y, lo, hi));
+      this.drops.push(new Drop(it.kind, it.value, x, m.y - d.h / 2, m.plat, lo, hi));
     });
 
     const s = this.spawns.find(sp => sp.monster === m);
@@ -481,6 +481,7 @@ const Game = {
     }
     this.effects.draw(ctx);
     ctx.restore();
+    map.drawOverlay(ctx, cam, t);
 
     if (map.theme.vignette) {
       const g = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35, VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.95);

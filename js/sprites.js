@@ -384,7 +384,24 @@ function drawSlime(ctx, m) {
   ctx.beginPath();
   ctx.arc(8, -11, 3, 0.2, Math.PI - 0.2);
   ctx.stroke();
-  if (d.boss) drawCrown(ctx, 0, -40);
+  if (d.boss) {
+    drawCrown(ctx, 0, -40);
+  } else {
+    // little antenna that wobbles as it hops
+    const tip = Math.sin(m.anim * 6) * 2;
+    ctx.strokeStyle = shade(d.color, -50);
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(4, -39);
+    ctx.quadraticCurveTo(6, -47, 9 + tip, -52);
+    ctx.stroke();
+    ctx.fillStyle = shade(d.color, 50);
+    circle(ctx, 9 + tip, -53, 3);
+    ctx.fill();
+    ctx.strokeStyle = shade(d.color, -50);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -470,19 +487,32 @@ function drawStump(ctx, m) {
   ellipse(ctx, 0, -48, 13, 3.5); ctx.stroke();
   ellipse(ctx, 0, -48, 6, 1.6); ctx.stroke();
 
-  ctx.strokeStyle = '#4f9a3f';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(2, -50);
-  ctx.lineTo(4, -60);
-  ctx.stroke();
-  ctx.fillStyle = '#6cc04a';
+  // an axe left stuck in the top
   ctx.save();
-  ctx.translate(4, -60);
-  ctx.rotate(-0.6);
-  ellipse(ctx, 6, 0, 6, 3);
+  ctx.translate(-3, -49);
+  ctx.rotate(-0.45);
+  ctx.fillStyle = '#7a5530';
+  roundRect(ctx, -2.2, -34, 4.4, 34, 2);
   ctx.fill();
+  ctx.fillStyle = '#a07040';
+  ctx.fillRect(-2.2, -34, 1.6, 34);
+  ctx.fillStyle = '#c9d0d8';
+  ctx.beginPath();
+  ctx.moveTo(-1, -1);
+  ctx.lineTo(-13, -8);
+  ctx.quadraticCurveTo(-16, -1, -13, 5);
+  ctx.lineTo(-1, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillRect(-12, -5, 2, 7);
   ctx.restore();
+  ctx.strokeStyle = '#3b2412';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-8, -47);
+  ctx.lineTo(2, -49);
+  ctx.stroke();
 
   drawEyes(ctx, 2, -28, 9, m.aggro > 0);
   ctx.fillStyle = '#3b2412';

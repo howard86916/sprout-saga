@@ -21,7 +21,7 @@ class Monster {
     this.minX = lo + margin;
     this.maxX = Math.max(this.minX, hi - margin);
     this.x = clamp(x, this.minX, this.maxX);
-    this.y = plat.y;
+    this.y = surfY(plat, this.x);
 
     this.hp = d.hp;
     this.dir = chance(0.5) ? 1 : -1;
@@ -94,6 +94,7 @@ class Monster {
       this.x = this.maxX;
       this.dir = -1;
     }
+    this.y = surfY(this.plat, this.x);
 
     // Touch damage
     if (p && p.invuln <= 0 && this.spawnT <= 0 && rectsOverlap(this.box, p.box)) {

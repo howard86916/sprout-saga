@@ -184,12 +184,12 @@ class Effects {
 /* ---------- loot on the ground ---------- */
 
 class Drop {
-  constructor(kind, value, x, y, floorY, minX, maxX) {
+  constructor(kind, value, x, y, plat, minX, maxX) {
     this.kind = kind; // 'gold' | 'item'
     this.value = value; // gold amount or item id
     this.x = x;
     this.y = y;
-    this.floorY = floorY;
+    this.plat = plat; // the platform it lands on
     this.minX = minX;
     this.maxX = maxX;
     this.vx = rand(-70, 70);
@@ -228,8 +228,9 @@ class Drop {
       this.x = clamp(this.x + this.vx * dt, this.minX, this.maxX);
       this.y += this.vy * dt;
       this.spin += dt * 10;
-      if (this.vy > 0 && this.y >= this.floorY) {
-        this.y = this.floorY;
+      const floor = surfY(this.plat, this.x);
+      if (this.vy > 0 && this.y >= floor) {
+        this.y = floor;
         this.settled = true;
       }
     }

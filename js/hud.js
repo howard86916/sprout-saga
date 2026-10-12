@@ -197,8 +197,9 @@ const Hud = {
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (const p of m.platforms) {
-      ctx.moveTo(mx + p.x * s, my + p.y * s);
-      ctx.lineTo(mx + (p.x + p.w) * s, my + p.y * s);
+      ctx.moveTo(mx + p.x * s, my + surfY(p, p.x) * s);
+      if (p.bridge) ctx.lineTo(mx + (p.x + p.w / 2) * s, my + surfY(p, p.x + p.w / 2) * s);
+      ctx.lineTo(mx + (p.x + p.w) * s, my + surfY(p, p.x + p.w) * s);
     }
     ctx.stroke();
     ctx.strokeStyle = 'rgba(207,224,255,0.5)';

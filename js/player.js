@@ -174,12 +174,15 @@ class Player {
       if (dir && this.stun <= 0) this.vx = approach(this.vx, dir * PHYS.walk, PHYS.airAccel * dt);
     }
 
+    const prevX = this.x;
     this.x = clamp(this.x + this.vx * dt, this.w / 2, map.width - this.w / 2);
 
     if (this.onGround) {
       if (this.x < this.plat.x || this.x > this.plat.x + this.plat.w) {
         this.leaveGround();
         this.vy = 0;
+      } else {
+        this.y = surfY(this.plat, this.x); // follow bridge sag
       }
       return;
     }
@@ -188,18 +191,23 @@ class Player {
     this.y += this.vy * dt;
     if (this.vy >= 0) {
       let land = null;
+      let landY = Infinity;
       for (const p of map.platforms) {
         if (p === this.dropThrough || this.x < p.x || this.x > p.x + p.w) continue;
-        if (prevY <= p.y + 0.5 && this.y >= p.y && (!land || p.y < land.y)) land = p;
+        const s1 = surfY(p, this.x);
+        if (prevY <= surfY(p, prevX) + 0.5 && this.y >= s1 && s1 < landY) {
+          land = p;
+          landY = s1;
+        }
       }
       if (land) this.land(land);
     }
-    if (this.dropThrough && this.y > this.dropThrough.y + 12) this.dropThrough = null;
+    if (this.dropThrough && this.y > surfY(this.dropThrough, this.x) + 12) this.dropThrough = null;
     if (this.y > map.height + 300) this.placeAt(map.def.respawn.x, map.groundY);
   }
 
   land(p) {
-    this.y = p.y;
+    this.y = surfY(p, this.x);
     this.vy = 0;
     this.onGround = true;
     this.plat = p;
@@ -257,7 +265,9 @@ class Player {
     }
     if (v > 0) {
       for (const p of game.map.platforms) {
-        if (p.y > r.top + 4 && prevY <= p.y && this.y >= p.y && this.x >= p.x && this.x <= p.x + p.w) {
+        if (this.x < p.x || this.x > p.x + p.w) continue;
+        const sy = surfY(p, this.x);
+        if (sy > r.top + 4 && prevY <= sy && this.y >= sy) {
           this.rope = null;
           this.land(p);
           return;

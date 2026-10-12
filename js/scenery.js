@@ -20,7 +20,7 @@ function drawIcon(ctx, key, size) {
       break;
     case 'snailShell': drawShellIcon(ctx, '#c98b4a'); break;
     case 'blueShell': drawShellIcon(ctx, '#4a73c9'); break;
-    case 'gel': drawGelIcon(ctx, '#5fd7c4', false); break;
+    case 'gel': drawGelIcon(ctx, '#8ee04a', false); break;
     case 'royalGel': drawGelIcon(ctx, '#4fb9ff', true); break;
     case 'capPiece': drawCapIcon(ctx); break;
     case 'bark': drawBarkIcon(ctx); break;

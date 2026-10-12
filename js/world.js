@@ -44,6 +44,20 @@ class Npc {
   }
 }
 
+// Height of a platform's walkable surface at x. Flat platforms return p.y;
+// rope bridges sag between their two end points.
+function surfY(p, x) {
+  const b = p.bridge;
+  if (!b) return p.y;
+  const t = clamp((x - b.x1) / (b.x2 - b.x1), 0, 1);
+  return lerp(b.y1, b.y2, t) + b.sag * 4 * t * (1 - t);
+}
+
+function makeBridge(b) {
+  const bridge = { x1: b.x1, y1: b.y1, x2: b.x2, y2: b.y2, sag: b.sag ?? 30 };
+  return { x: b.x1, w: b.x2 - b.x1, y: Math.min(b.y1, b.y2), solid: false, ground: false, bridge };
+}
+
 class GameMap {
   constructor(id) {
     const def = MAPS[id];
@@ -55,17 +69,21 @@ class GameMap {
     this.height = def.height;
     this.groundY = def.groundY;
     this.theme = THEMES[def.theme];
-    this.platforms = def.platforms.map(p => ({ x: p.x, y: p.y, w: p.w, solid: false, ground: false }));
+    this.platforms = def.platforms.map(p => ({ x: p.x, y: p.y, w: p.w, solid: false, ground: false, branch: p.branch }));
+    this.bridges = (def.bridges || []).map(makeBridge);
+    this.platforms.push(...this.bridges);
     this.ground = { x: 0, y: def.groundY, w: def.width, solid: true, ground: true };
     this.platforms.push(this.ground);
+    this.trunks = def.trunks || [];
     this.ropes = def.ropes.map(r => ({ ...r }));
     this.portals = def.portals.map(p => ({ ...p, y: p.y ?? def.groundY }));
     this.npcs = (def.npcs || []).map(n => new Npc(n, def.groundY));
     this.buildDecor();
+    this.art = this.theme.painter === 'forest' ? getForestArt(this) : null;
   }
 
   platformAt(x, y) {
-    return this.platforms.find(p => Math.abs(p.y - y) < 1 && x >= p.x && x <= p.x + p.w) || null;
+    return this.platforms.find(p => x >= p.x && x <= p.x + p.w && Math.abs(surfY(p, x) - y) < 1) || null;
   }
 
   buildDecor() {
@@ -74,6 +92,13 @@ class GameMap {
     this.back = [];
     this.front = [];
     for (const h of this.def.houses || []) this.back.push({ type: 'house', ...h, y: this.groundY });
+    if (kind === 'forest') {
+      // the painted-forest renderer supplies its own scenery
+      this.clouds = [];
+      this.stars = null;
+      this.seed = 0;
+      return;
+    }
 
     const busy = x =>
       this.portals.some(p => p.y === this.groundY && Math.abs(p.x - x) < 70) ||
@@ -108,6 +133,10 @@ class GameMap {
   /* ---------- screen-space background ---------- */
 
   drawBackground(ctx, cam, t) {
+    if (this.art) {
+      drawForestBackground(ctx, this, cam, t);
+      return;
+    }
     const th = this.theme;
     const sky = ctx.createLinearGradient(0, 0, 0, VIEW_H);
     sky.addColorStop(0, th.skyTop);
@@ -183,7 +212,16 @@ class GameMap {
 
   /* ---------- world-space terrain ---------- */
 
+  // Screen-space effects drawn on top of everything in the world.
+  drawOverlay(ctx, cam, t) {
+    if (this.art) drawForestOverlay(ctx, this, cam, t);
+  }
+
   drawWorld(ctx, cam, t) {
+    if (this.art) {
+      drawForestWorld(ctx, this, cam, t);
+      return;
+    }
     const x0 = cam.x - 220;
     const x1 = cam.x + VIEW_W + 220;
     for (const d of this.back) {
@@ -199,7 +237,8 @@ class GameMap {
     }
     this.drawGround(ctx, cam);
     for (const r of this.ropes) if (r.x > x0 && r.x < x1) this.drawRope(ctx, r);
-    for (const p of this.platforms) if (!p.ground && p.x + p.w > x0 && p.x < x1) this.drawPlatform(ctx, p);
+    for (const p of this.bridges) if (p.x < x1 && p.x + p.w > x0) drawBridge(ctx, p);
+    for (const p of this.platforms) if (!p.ground && !p.bridge && p.x + p.w > x0 && p.x < x1) this.drawPlatform(ctx, p);
     for (const d of this.front) {
       if (d.x < x0 || d.x > x1) continue;
       if (d.type === 'flower') drawFlower(ctx, d.x, d.y, d.hue);
@@ -261,26 +300,35 @@ class GameMap {
     ctx.fill();
   }
 
+  // Twisted hemp rope hanging from a wooden peg.
   drawRope(ctx, r) {
+    const top = r.top - 2;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#6b4526';
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#8a7650';
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(r.x, r.top + 6);
+    ctx.moveTo(r.x, top);
     ctx.lineTo(r.x, r.bottom);
     ctx.stroke();
-    ctx.strokeStyle = '#b08355';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(r.x - 1, r.top + 6);
-    ctx.lineTo(r.x - 1, r.bottom);
+    ctx.strokeStyle = '#e4d6a8';
+    ctx.lineWidth = 4;
     ctx.stroke();
-    ctx.fillStyle = '#5a3a1e';
+    ctx.strokeStyle = '#a8936a';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    for (let y = r.top + 18; y < r.bottom; y += 16) {
-      ctx.moveTo(r.x + 4, y);
-      ctx.ellipse(r.x, y, 4, 2.5, 0, 0, Math.PI * 2);
+    for (let y = top + 4; y < r.bottom; y += 6) {
+      ctx.moveTo(r.x - 2, y);
+      ctx.lineTo(r.x + 2, y + 4);
     }
+    ctx.stroke();
+    ctx.fillStyle = '#6b4a26';
+    roundRect(ctx, r.x - 5, top - 14, 10, 18, 3);
+    ctx.fill();
+    ctx.fillStyle = '#9a7040';
+    roundRect(ctx, r.x - 5, top - 14, 4, 18, 2);
+    ctx.fill();
+    ctx.fillStyle = '#c9b88a';
+    circle(ctx, r.x, r.bottom, 3.5);
     ctx.fill();
   }
 
