@@ -249,34 +249,123 @@ function drawSword(ctx, x, y, angle, weapon, len = 30) {
   ctx.restore();
 }
 
-// Back view used while on a rope.
+// Back view used while on a rope: elbows out to the sides, hands gripping the rope
+// above the head (hand over hand), legs stepping up and hugging the rope.
 function drawClimber(ctx, o) {
   const L = o.look;
-  const p = Math.sin(o.climbPhase);
-  if (o.weapon) drawSword(ctx, -12, -18, -0.9, o.weapon, 26);
-  ctx.fillStyle = L.pants;
-  ctx.fillRect(-7, -15 + p * 2, 6, 11);
-  ctx.fillRect(1, -15 - p * 2, 6, 11);
-  ctx.fillStyle = L.shoes;
-  ellipse(ctx, -4, -3 + p * 2, 4, 3); ctx.fill();
-  ellipse(ctx, 4, -3 - p * 2, 4, 3); ctx.fill();
+  const p = Math.sin(o.climbPhase); // -1..1; left side reaches up when p > 0
+  const side = [
+    { s: -1, reach: p },
+    { s: 1, reach: -p },
+  ];
+
+  // legs: the leg on the reaching side bends its knee up to take the next step
+  for (const { s, reach } of side) {
+    const lift = Math.max(0, -reach) * 7;
+    const hipX = s * 4;
+    const kneeX = s * 7;
+    const kneeY = -9 - lift;
+    const footX = s * 2.5;
+    const footY = -2 - lift * 0.6;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = shade(L.pants, s < 0 ? -15 : 0);
+    ctx.lineWidth = 6.5;
+    ctx.beginPath();
+    ctx.moveTo(hipX, -15);
+    ctx.lineTo(kneeX, kneeY);
+    ctx.lineTo(footX, footY);
+    ctx.stroke();
+    ctx.fillStyle = L.shoes;
+    ellipse(ctx, footX, footY + 1, 4, 3);
+    ctx.fill();
+  }
+
+  // forearms run behind the head up to the rope; the head hides most of them
+  const hands = side.map(({ s, reach }) => ({
+    s,
+    elbowX: s * 16,
+    elbowY: -42 - reach * 3,
+    handX: s * 2.5,
+    handY: -66 - reach * 6,
+  }));
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = shade(L.skin, -20);
+  ctx.lineWidth = 4.5;
+  for (const h of hands) {
+    ctx.beginPath();
+    ctx.moveTo(h.elbowX, h.elbowY);
+    ctx.lineTo(h.handX, h.handY);
+    ctx.stroke();
+  }
+
+  // torso (back)
   ctx.fillStyle = L.shirt;
   roundRect(ctx, -9, -31, 18, 18, 5);
   ctx.fill();
-  ctx.fillStyle = L.skin;
-  ellipse(ctx, 0, -46, 15, 14); ctx.fill();
-  ctx.fillStyle = L.hair;
-  ellipse(ctx, 0, -48, 15.5, 13); ctx.fill();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = L.skin;
-  ctx.lineWidth = 4.5;
+  ctx.fillStyle = shade(L.shirt, -35);
+  ctx.fillRect(-9, -16, 18, 3);
+  ctx.strokeStyle = shade(L.shirt, -25);
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(-8, -29); ctx.lineTo(-5, -60 + p * 4);
-  ctx.moveTo(8, -29); ctx.lineTo(5, -60 - p * 4);
+  ctx.moveTo(0, -29);
+  ctx.lineTo(0, -17);
   ctx.stroke();
+
+  // upper arms (sleeves) angle out from the shoulders to the elbows
+  for (const h of hands) {
+    ctx.strokeStyle = L.shirt;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(h.s * 7, -28);
+    ctx.lineTo(h.elbowX, h.elbowY);
+    ctx.stroke();
+    ctx.fillStyle = L.skin;
+    circle(ctx, h.elbowX, h.elbowY, 2.6);
+    ctx.fill();
+  }
+
+  // sword slung across the back, hilt over the left shoulder
+  if (o.weapon) drawSword(ctx, -11, -33, 1.2, o.weapon, 26);
+
+  // back of the head: ears peeking out, then hair
+  ctx.fillStyle = shade(L.skin, -15);
+  ellipse(ctx, -14.5, -44, 3, 4); ctx.fill();
+  ellipse(ctx, 14.5, -44, 3, 4); ctx.fill();
   ctx.fillStyle = L.skin;
-  circle(ctx, -5, -60 + p * 4, 3); ctx.fill();
-  circle(ctx, 5, -60 - p * 4, 3); ctx.fill();
+  ellipse(ctx, 0, -38, 7, 4); ctx.fill(); // nape of the neck
+  ctx.fillStyle = L.hair;
+  ellipse(ctx, 0, -47, 15, 14);
+  ctx.fill();
+  if (L.hairStyle === 'spiky') {
+    ctx.beginPath();
+    ctx.moveTo(-14, -48);
+    for (const [x, y] of [[-17, -40], [-10, -42], [-8, -35], [-3, -40], [0, -34], [3, -40], [8, -35], [10, -42], [17, -40], [14, -48]]) {
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-11, -57); ctx.lineTo(-16, -64); ctx.lineTo(-4, -60);
+    ctx.lineTo(-1, -67); ctx.lineTo(5, -60); ctx.lineTo(12, -63); ctx.lineTo(11, -55);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ellipse(ctx, -5, -53, 6, 3);
+  ctx.fill();
+
+  // hands wrapped around the rope
+  for (const h of hands) {
+    ctx.fillStyle = L.skin;
+    ellipse(ctx, h.handX, h.handY, 3.6, 3);
+    ctx.fill();
+    ctx.strokeStyle = shade(L.skin, -45);
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(h.handX - 2.5, h.handY - 0.5);
+    ctx.lineTo(h.handX + 2.5, h.handY - 0.5);
+    ctx.stroke();
+  }
 }
 
 /* ---------- monsters ---------- */
