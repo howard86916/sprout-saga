@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprout Saga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="game">
+  <canvas id="canvas"></canvas>
+
+  <div id="topbar" hidden>
+    <button class="hud-btn" data-win="inv">Inventory<kbd>I</kbd></button>
+    <button class="hud-btn" data-win="stats">Stats<kbd>C</kbd><span id="ap-badge" hidden>AP</span></button>
+    <button class="hud-btn" data-win="help">Help<kbd>H</kbd></button>
+    <button class="hud-btn" id="btn-mute">Sound<kbd>M</kbd></button>
+  </div>
+
+  <div class="window" id="win-stats" data-name="stats" style="left:40px; top:60px; width:270px" hidden>
+    <div class="win-head"><span>Character</span><button class="win-close" aria-label="Close">×</button></div>
+    <div class="win-body"></div>
+  </div>
+
+  <div class="window" id="win-inv" data-name="inv" style="left:640px; top:60px; width:232px" hidden>
+    <div class="win-head"><span>Inventory</span><button class="win-close" aria-label="Close">×</button></div>
+    <div class="win-body"></div>
+  </div>
+
+  <div class="window" id="win-shop" data-name="shop" style="left:200px; top:64px; width:540px" hidden>
+    <div class="win-head"><span>Shop</span><button class="win-close" aria-label="Close">×</button></div>
+    <div class="win-body"></div>
+  </div>
+
+  <div class="window" id="win-dialog" data-name="dialog" style="left:280px; top:150px; width:400px" hidden>
+    <div class="win-head"><span>NPC</span><button class="win-close" aria-label="Close">×</button></div>
+    <div class="win-body"></div>
+  </div>
+
+  <div class="window" id="win-help" data-name="help" style="left:220px; top:56px; width:520px" hidden>
+    <div class="win-head"><span>How to Play</span><button class="win-close" aria-label="Close">×</button></div>
+    <div class="win-body help">
+      <div class="keys">
+        <div><span class="k"><kbd>←</kbd><kbd>→</kbd></span><span>Move</span></div>
+        <div><span class="k"><kbd>Space</kbd><kbd>Alt</kbd></span><span>Jump</span></div>
+        <div><span class="k"><kbd>↑</kbd><kbd>↓</kbd></span><span>Climb ropes</span></div>
+        <div><span class="k"><kbd>↓</kbd>+<kbd>Space</kbd></span><span>Drop through a platform</span></div>
+        <div><span class="k"><kbd>↑</kbd></span><span>Enter portal / talk to NPC (or click them)</span></div>
+        <div><span class="k"><kbd>X</kbd></span><span>Attack (hold to keep swinging)</span></div>
+        <div><span class="k"><kbd>A</kbd></span><span>Power Strike: heavy single-target hit</span></div>
+        <div><span class="k"><kbd>D</kbd></span><span>Dash: burst forward, briefly invulnerable</span></div>
+        <div><span class="k"><kbd>S</kbd></span><span>Slash Blast: hits up to 6 enemies (Lv 5)</span></div>
+        <div><span class="k"><kbd>Z</kbd></span><span>Pick up loot (hold to vacuum)</span></div>
+        <div><span class="k"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span>Red Potion / Blue Potion / Elixir</span></div>
+        <div><span class="k"><kbd>I</kbd><kbd>C</kbd><kbd>H</kbd></span><span>Inventory / Stats / Help</span></div>
+        <div><span class="k"><kbd>M</kbd><kbd>Esc</kbd></span><span>Sound on/off · Close window</span></div>
+      </div>
+      <p class="tip">Head east from Hearthvale: <b>Sunny Meadow</b> → <b>Mushroom Hills</b> → climb to the very top for <b>King Bloblet's Den</b>.
+        Spend Ability Points after every level-up, and visit Grandpa Moss for potions and better swords. Progress saves automatically.</p>
+    </div>
+  </div>
+
+  <div id="tooltip" hidden></div>
+
+  <div id="title">
+    <div class="title-card">
+      <h1>Sprout Saga</h1>
+      <p class="tagline">A tiny side-scrolling adventure</p>
+      <label class="name-label">Character name
+        <input id="name-input" maxlength="12" value="Sprout" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="title-buttons">
+        <button id="btn-new" class="btn big">New Game</button>
+        <button id="btn-continue" class="btn big alt" hidden>Continue</button>
+      </div>
+      <p class="hint">Arrows move · Space jump · X attack · Z loot · H help</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/input.js"></script>
+<script src="js/data.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/scenery.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/world.js"></script>
+<script src="js/monster.js"></script>
+<script src="js/player.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
